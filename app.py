@@ -24,12 +24,37 @@ investimento = st.sidebar.number_input("Soldi investiti ($)", min_value=0.0, val
 R_VALS = {"Comune": 0.0000000011, "Raro": 0.0000000016, "Epico": 0.0000000022, "Leggendario": 0.0000000044}
 totale_terreni = c + r + e + l
 
-# Determinazione Moltiplicatore Standard (Tabella 2026)
-if totale_terreni <= 150: boost_std = 30
-elif totale_terreni <= 220: boost_std = 20
-elif totale_terreni <= 290: boost_std = 15
-elif totale_terreni <= 360: boost_std = 12
-else: boost_std = 2
+# --- NUOVA LOGICA BOOST INTERNAZIONALE (ITALIA) vs USA ---
+st.sidebar.header("Localizzazione")
+regione = st.sidebar.radio("Mercato di riferimento", ["Internazionale (Italia)", "USA"])
+
+def calcola_boost(totale, regione):
+    if regione == "USA":
+        if totale <= 150: return 30
+        if totale <= 220: return 20
+        if totale <= 290: return 15
+        if totale <= 360: return 12
+        if totale <= 430: return 10
+        if totale <= 500: return 8
+        if totale <= 625: return 7
+        if totale <= 750: return 6
+        if totale <= 875: return 5
+        if totale <= 1000: return 4
+        if totale <= 1500: return 3
+        return 2
+    else: # TABELLA INTERNAZIONALE (ITALIA)
+        if totale <= 60: return 20
+        if totale <= 110: return 15
+        if totale <= 160: return 12
+        if totale <= 210: return 8  # <--- Qui scatta l'8x dopo i 160 terreni
+        if totale <= 260: return 7
+        if totale <= 310: return 6
+        if totale <= 360: return 5
+        if totale <= 460: return 4
+        if totale <= 560: return 3
+        return 2
+
+boost_std = calcola_boost(totale_terreni, regione)
 
 # Rendimento base al secondo (con badge)
 rend_base_sec = (c*R_VALS["Comune"] + r*R_VALS["Raro"] + e*R_VALS["Epico"] + l*R_VALS["Leggendario"]) * (1 + bonus_badge)
