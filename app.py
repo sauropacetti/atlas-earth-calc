@@ -102,14 +102,14 @@ try:
     creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
     client = gspread.authorize(creds)
     
-    # Apertura foglio (Assicurati che il nome sia identico!)
+    # Apertura foglio
     sh = client.open("Atlas_Earth_Data").worksheet("Guadagni")
     
-with st.form("form_registro"):
+    with st.form("form_registro"):
         d_col, v_col = st.columns(2)
         data_log = d_col.date_input("Data", date.today())
         
-        # QUESTA È LA RIGA DEL VALORE_LOG MODIFICATA:
+        # Inserimento corretto per i decimali
         valore_log = v_col.number_input(
             "Totale Accumulato ($)", 
             min_value=0.0, 
@@ -120,53 +120,35 @@ with st.form("form_registro"):
         btn = st.form_submit_button("Salva nel Cloud")
         
         if btn:
-            try:
-                # Trasformiamo esplicitamente in float per essere sicuri
-                valore_da_inviare = float(valore_log)
-                sh.append_row([str(data_log), valore_da_inviare])
-                st.toast(f"Salvato: {valore_da_inviare:.6f}", icon="✅")
-                # Ricarica la pagina per aggiornare la tabella
-                st.rerun()
-            except Exception as e:
-                st.error(f"Errore nel salvataggio: {e}")
+            valore_da_inviare = float(valore_log)
+            sh.append_row([str(data_log), valore_da_inviare])
+            st.toast(f"Salvato: {valore_da_inviare:.6f}", icon="✅")
+            st.rerun()
 
-# Visualizzazione dati ottimizzata
+    # Visualizzazione dati ottimizzata
     st.subheader("📈 Storico Progressi")
     record_storici = sh.get_all_records()
     
     if record_storici:
-        # Convertiamo in DataFrame per manipolare i dati facilmente
         df_storico = pd.DataFrame(record_storici)
-        
-        # 1. Pulizia: convertiamo la colonna Data in formato data reale per l'ordinamento
         df_storico['Data'] = pd.to_datetime(df_storico['Data']).dt.date
-        
-        # 2. Ordinamento: mettiamo i dati più recenti in alto
-        df_storico = df_storico.sort_values(by="Data", ascending=False)
-        
-        # 3. Calcolo guadagno giornaliero (differenza tra righe)
-        # Ordiniamo temporaneamente per calcolare la differenza corretta
         df_calc = df_storico.sort_values(by="Data")
         df_calc['Guadagno Giornaliero'] = df_calc['Guadagno Totale'].diff().fillna(0)
-        
-        # Riportiamo all'ordine decrescente per la tabella
         df_display = df_calc.sort_values(by="Data", ascending=False)
 
-        # 4. Formattazione: mostriamo 4 decimali per i dollari
         st.dataframe(
             df_display,
             column_config={
                 "Data": st.column_config.DateColumn("Data", format="DD/MM/YYYY"),
-                "Guadagno Totale": st.column_config.NumberColumn("Totale Accumulato ($)", format="$ %.4f"),
-                "Guadagno Giornaliero": st.column_config.NumberColumn("Guadagno vs Ieri ($)", format="$ %.4f"),
+                "Guadagno Totale": st.column_config.NumberColumn("Totale Accumulato ($)", format="%.5f"),
+                "Guadagno Giornaliero": st.column_config.NumberColumn("Guadagno vs Ieri ($)", format="%.5f"),
             },
             hide_index=True,
             use_container_width=True
         )
-    else:
-        st.info("Nessun dato presente nel foglio Google.")
 
+# QUI AGGIUNGIAMO IL BLOCCO MANCANTE CHE CAUSA L'ERRORE
 except Exception as e:
-    st.error("⚠️ Errore di connessione a Google Sheets. Verifica i Secrets e la condivisione del foglio.")
+    st.error("⚠️ Errore di connessione o configurazione.")
     if st.checkbox("Mostra dettaglio errore"):
         st.code(str(e))
