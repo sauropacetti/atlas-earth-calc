@@ -105,15 +105,30 @@ try:
     # Apertura foglio (Assicurati che il nome sia identico!)
     sh = client.open("Atlas_Earth_Data").worksheet("Guadagni")
     
-    with st.form("form_registro"):
+with st.form("form_registro"):
         d_col, v_col = st.columns(2)
         data_log = d_col.date_input("Data", date.today())
-        valore_log = v_col.number_input("Totale Accumulato ($)", format="%.4f")
+        
+        # QUESTA È LA RIGA DEL VALORE_LOG MODIFICATA:
+        valore_log = v_col.number_input(
+            "Totale Accumulato ($)", 
+            min_value=0.0, 
+            format="%.6f", 
+            step=0.000001
+        )
+        
         btn = st.form_submit_button("Salva nel Cloud")
         
         if btn:
-            sh.append_row([str(data_log), valore_log])
-            st.toast("Dato inviato con successo!", icon="✅")
+            try:
+                # Trasformiamo esplicitamente in float per essere sicuri
+                valore_da_inviare = float(valore_log)
+                sh.append_row([str(data_log), valore_da_inviare])
+                st.toast(f"Salvato: {valore_da_inviare:.6f}", icon="✅")
+                # Ricarica la pagina per aggiornare la tabella
+                st.rerun()
+            except Exception as e:
+                st.error(f"Errore nel salvataggio: {e}")
 
 # Visualizzazione dati ottimizzata
     st.subheader("📈 Storico Progressi")
