@@ -72,4 +72,20 @@ col1.metric("Mensile Est.", f"${mensile:.2f}")
 col2.metric("Annuale Est.", f"${annuale:.2f}")
 col3.metric("Boost Italia", f"{boost_std}x")
 
-st.info(f"Stai sfruttando {ore_srb_effettive} ore di Super Boost (50x) ogni 2 settimane
+st.info(f"Stai sfruttando {ore_srb_effettive} ore di Super Boost (50x) ogni 2 settimane.")
+
+# --- GRAFICO A TORTA ---
+fig = go.Figure(data=[go.Pie(
+    labels=list(R_VALS.keys()), 
+    values=[c, r, e, l],
+    hole=.4,
+    marker_colors=['#BDC3C7', '#3498DB', '#9B59B6', '#F1C40F']
+)])
+st.plotly_chart(fig)
+
+# --- BREAK EVEN ---
+if investimento > 0:
+    st.subheader("📊 Analisi Rientro")
+    mesi = investimento / mensile if mensile > 0 else 0
+    st.success(f"Recupero investimento in: **{mesi:.1f} mesi**")
+    st.write(f"Rendimento Annuo (ROI): **{(annuale/investimento)*100:.1f}%**")
