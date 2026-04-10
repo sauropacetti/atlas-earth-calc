@@ -1,5 +1,36 @@
 import streamlit as st
-import plotly.graph_objects as go
+import gspread
+from google.oauth2.service_account import Credentials
+from datetime import date
+
+# --- CONNESSIONE GOOGLE SHEETS ---
+scope = ["https://www.googleapis.com/auth/spreadsheets"]
+creds_dict = st.secrets["gcp_service_account"]
+creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
+client = gspread.authorize(creds)
+
+# Sostituisci con il nome esatto del tuo file
+sh = client.open("Atlas_Earth_Data").worksheet("Guadagni")
+
+st.header("📝 Diario su Google Sheets")
+
+with st.form("diario_form"):
+    data_log = st.date_input("Data", date.today())
+    valore_log = st.number_input("Totale accumulato ($)", format="%.4f")
+    submit_log = st.form_submit_button("Salva nel Cloud")
+
+    if submit_log:
+        try:
+            sh.append_row([str(data_log), valore_log])
+            st.success("Dato salvato correttamente su Google Sheets!")
+        except Exception as e:
+            st.error(f"Errore: {e}")
+
+# Visualizza gli ultimi dati inseriti
+st.subheader("Storico ultimi inserimenti")
+dati_esistenti = sh.get_all_records()
+if dati_esistenti:
+    st.table(dati_esistenti[-5:]) # Mostra gli ultimi 5
 
 # --- CONFIGURAZIONE PAGINA ---
 st.set_page_config(page_title="Atlas Earth IT Calc", layout="centered")
