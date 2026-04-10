@@ -28,15 +28,15 @@ investimento = st.sidebar.number_input("Soldi investiti ($)", min_value=0.0, val
 totale_terreni = c + r + e + l
 
 def get_boost_italia(n):
-    if n <= 60: return 20
-    if n <= 110: return 15
-    if n <= 160: return 12
-    if n <= 210: return 8
-    if n <= 260: return 7
-    if n <= 310: return 6
-    if n <= 360: return 5
-    if n <= 460: return 4
-    if n <= 560: return 3
+    if n <= 70: return 20
+    if n <= 100: return 15
+    if n <= 135: return 10
+    if n <= 170: return 8
+    if n <= 200: return 7
+    if n <= 250: return 6
+    if n <= 300: return 5
+    if n <= 350: return 4
+    if n <= 400: return 3
     return 2
 
 boost_std = get_boost_italia(totale_terreni)
