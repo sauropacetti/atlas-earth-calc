@@ -115,12 +115,39 @@ try:
             sh.append_row([str(data_log), valore_log])
             st.toast("Dato inviato con successo!", icon="✅")
 
-    # Visualizzazione dati
-    st.subheader("Ultimi record salvati")
+# Visualizzazione dati ottimizzata
+    st.subheader("📈 Storico Progressi")
     record_storici = sh.get_all_records()
+    
     if record_storici:
+        # Convertiamo in DataFrame per manipolare i dati facilmente
         df_storico = pd.DataFrame(record_storici)
-        st.dataframe(df_storico.tail(7), use_container_width=True)
+        
+        # 1. Pulizia: convertiamo la colonna Data in formato data reale per l'ordinamento
+        df_storico['Data'] = pd.to_datetime(df_storico['Data']).dt.date
+        
+        # 2. Ordinamento: mettiamo i dati più recenti in alto
+        df_storico = df_storico.sort_values(by="Data", ascending=False)
+        
+        # 3. Calcolo guadagno giornaliero (differenza tra righe)
+        # Ordiniamo temporaneamente per calcolare la differenza corretta
+        df_calc = df_storico.sort_values(by="Data")
+        df_calc['Guadagno Giornaliero'] = df_calc['Guadagno Totale'].diff().fillna(0)
+        
+        # Riportiamo all'ordine decrescente per la tabella
+        df_display = df_calc.sort_values(by="Data", ascending=False)
+
+        # 4. Formattazione: mostriamo 4 decimali per i dollari
+        st.dataframe(
+            df_display,
+            column_config={
+                "Data": st.column_config.DateColumn("Data", format="DD/MM/YYYY"),
+                "Guadagno Totale": st.column_config.NumberColumn("Totale Accumulato ($)", format="$ %.4f"),
+                "Guadagno Giornaliero": st.column_config.NumberColumn("Guadagno vs Ieri ($)", format="$ %.4f"),
+            },
+            hide_index=True,
+            use_container_width=True
+        )
     else:
         st.info("Nessun dato presente nel foglio Google.")
 
